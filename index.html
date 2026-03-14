@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Code vs Claude Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --code-bg: #0a0e0a;
+      --code-accent: #39ff7e;
+      --code-accent-dim: #1a6b3a;
+      --code-text: #c8ffd4;
+      --chat-bg: #0e0a07;
+      --chat-accent: #ffb347;
+      --chat-accent-dim: #7a4a1a;
+      --chat-text: #fff0d4;
+      --divider: #39ff7e;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.07);
+    }
+
+    html, body {
+      height: 100%;
+      background: #080808;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 3.5rem 2rem 2rem;
+      background: #080808;
+    }
+
+    header .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 300;
+      line-height: 1.05;
+      background: linear-gradient(135deg, var(--code-accent) 0%, #fff 40%, var(--chat-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    header p.subtitle {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: rgba(255,255,255,0.45);
+      font-weight: 300;
+      max-width: 480px;
+      margin-inline: auto;
+      line-height: 1.6;
+    }
+
+    /* ── DIVIDER LINE ── */
+    .h-rule {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--code-accent), var(--chat-accent), transparent);
+      opacity: 0.4;
+      margin: 2rem auto;
+      max-width: 600px;
+      animation: pulse-rule 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-rule {
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.55; }
+    }
+
+    /* ── MAIN SPLIT ── */
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 3px 1fr;
+      min-height: calc(100vh - 200px);
+    }
+
+    /* Vertical glowing divider */
+    .split-divider {
+      position: relative;
+      background: linear-gradient(180deg, transparent 0%, var(--code-accent) 20%, var(--chat-accent) 80%, transparent 100%);
+      opacity: 0.5;
+      animation: pulse-divider 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-divider {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.7; }
+    }
+
+    .split-divider::after {
+      content: '⟷';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #080808;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      line-height: 40px;
+      text-align: center;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      padding: 3rem 2.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.04;
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    .panel-code {
+      background: var(--code-bg);
+    }
+
+    .panel-code::before {
+      background-image: repeating-linear-gradient(
+        0deg, transparent, transparent 27px, rgba(57,255,126,0.3) 28px
+      ), repeating-linear-gradient(
+        90deg, transparent, transparent 27px, rgba(57,255,126,0.1) 28px
+      );
+    }
+
+    .panel-chat {
+      background: var(--chat-bg);
+    }
+
+    .panel-chat::before {
+      background-image: radial-gradient(circle, rgba(255,179,71,0.15) 1px, transparent 1px);
+    }
+
+    /* ── PANEL LABELS ── */
+    .panel-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      border-radius: 3px;
+      margin-bottom: 2rem;
+    }
+
+    .panel-code .panel-label {
+      background: rgba(57,255,126,0.1);
+      border: 1px solid rgba(57,255,126,0.25);
+      color: var(--code-accent);
+    }
+
+    .panel-chat .panel-label {
+      background: rgba(255,179,71,0.1);
+      border: 1px solid rgba(255,179,71,0.25);
+      color: var(--chat-accent);
+    }
+
+    .panel-label .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      animation: blink 2s step-start infinite;
+    }
+
+    .panel-code .dot { background: var(--code-accent); }
+    .panel-chat .dot { background: var(--chat-accent); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── PANEL HEADING ── */
+    .panel h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .panel-code h2 { color: var(--code-text); }
+    .panel-chat h2 { color: var(--chat-text); }
+
+    .panel .tagline {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      opacity: 0.55;
+    }
+
+    .panel-code .tagline { color: var(--code-text); }
+    .panel-chat .tagline { color: var(--chat-text); }
+
+    /* ── FEATURE CARDS ── */
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .feature {
+      padding: 1rem 1.2rem;
+      border-radius: 6px;
+      border-left: 3px solid transparent;
+      background: var(--surface);
+      transition: transform 0.2s ease, background 0.2s ease;
+      animation: slide-in 0.5s ease both;
+    }
+
+    .feature:hover {
+      transform: translateX(4px);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .panel-code .feature { border-color: var(--code-accent-dim); }
+    .panel-chat .feature { border-color: var(--chat-accent-dim); }
+
+    .feature-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+    }
+
+    .panel-code .feature-title { color: var(--code-accent); }
+    .panel-chat .feature-title { color: var(--chat-accent); }
+
+    .feature p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── TERMINAL DEMO ── */
+    .terminal {
+      margin-top: 2rem;
+      background: #020c02;
+      border: 1px solid rgba(57,255,126,0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+    }
+
+    .terminal-bar {
+      background: rgba(57,255,126,0.07);
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-bottom: 1px solid rgba(57,255,126,0.1);
+    }
+
+    .terminal-bar .btn { width: 11px; height: 11px; border-radius: 50%; }
+    .btn-red { background: #ff5f57; }
+    .btn-yellow { background: #ffbd2e; }
+    .btn-green { background: #28c940; }
+    .terminal-bar span { margin-left: 0.5rem; color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+
+    .terminal-body {
+      padding: 1.2rem 1.5rem;
+      line-height: 2;
+      color: rgba(57,255,126,0.85);
+    }
+
+    .terminal-body .prompt { color: rgba(57,255,126,0.45); }
+    .terminal-body .cmd { color: var(--code-accent); }
+    .terminal-body .out { color: rgba(255,255,255,0.4); }
+    .terminal-body .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1em;
+      background: var(--code-accent);
+      vertical-align: text-bottom;
+      animation: blink 1s step-start infinite;
+    }
+
+    /* ── CHAT BUBBLE DEMO ── */
+    .chat-demo {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .bubble {
+      max-width: 88%;
+      padding: 0.8rem 1.1rem;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      font-weight: 300;
+    }
+
+    .bubble-user {
+      align-self: flex-end;
+      background: rgba(255,179,71,0.15);
+      border: 1px solid rgba(255,179,71,0.2);
+      color: var(--chat-text);
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble-claude {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      border-bottom-left-radius: 4px;
+    }
+
+    .bubble-claude .typing {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .typing span {
+      width: 5px; height: 5px;
+      background: var(--chat-accent);
+      border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── COMPARISON TABLE ── */
+    .comparison-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .comparison-section h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 2.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      padding: 0.75rem 1.2rem;
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th:nth-child(1) { color: rgba(255,255,255,0.35); }
+    thead th:nth-child(2) { color: var(--code-accent); }
+    thead th:nth-child(3) { color: var(--chat-accent); }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+    tbody td {
+      padding: 0.9rem 1.2rem;
+      line-height: 1.5;
+      vertical-align: top;
+    }
+
+    tbody td:nth-child(1) {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+
+    tbody td:nth-child(2) { color: rgba(200,255,212,0.75); }
+    tbody td:nth-child(3) { color: rgba(255,240,212,0.75); }
+
+    .check { color: #39ff7e; font-size: 0.9rem; }
+    .cross { color: rgba(255,255,255,0.2); font-size: 0.9rem; }
+
+    /* ── USE CASE SECTION ── */
+    .use-cases {
+      padding: 2rem 2rem 5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .use-cases h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 2.5rem;
+    }
+
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .use-case-card {
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .use-case-card.code-card {
+      border-top: 2px solid var(--code-accent);
+    }
+
+    .use-case-card.chat-card {
+      border-top: 2px solid var(--chat-accent);
+    }
+
+    .use-case-card h4 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .code-card h4 { color: var(--code-accent); }
+    .chat-card h4 { color: var(--chat-accent); }
+
+    .use-case-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .use-case-card li {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      padding-left: 1.2rem;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .code-card li::before { content: '›'; position: absolute; left: 0; color: var(--code-accent); }
+    .chat-card li::before { content: '›'; position: absolute; left: 0; color: var(--chat-accent); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.1em;
+    }
+
+    footer a {
+      color: rgba(255,255,255,0.35);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feature:nth-child(1) { animation-delay: 0.05s; }
+    .feature:nth-child(2) { animation-delay: 0.1s; }
+    .feature:nth-child(3) { animation-delay: 0.15s; }
+    .feature:nth-child(4) { animation-delay: 0.2s; }
+    .feature:nth-child(5) { animation-delay: 0.25s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .split {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 3px auto;
+      }
+
+      .split-divider {
+        background: linear-gradient(90deg, transparent, var(--code-accent), var(--chat-accent), transparent);
+      }
+
+      .split-divider::after { display: none; }
+
+      .use-case-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table { font-size: 0.8rem; }
+      tbody td:nth-child(1) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <p class="eyebrow">Anthropic · Product Comparison · 2025</p>
+    <h1>Claude Code<br>vs Claude Chat</h1>
+    <p class="subtitle">Two products. One model. Very different purposes. Here's everything you need to know.</p>
+  </header>
+
+  <div class="h-rule"></div>
+
+  <!-- SPLIT PANELS -->
+  <div class="split">
+
+    <!-- LEFT: Claude Code -->
+    <div class="panel panel-code">
+      <div class="panel-label">
+        <span class="dot"></span>
+        Claude Code
+      </div>
+      <h2>Claude Code</h2>
+      <p class="tagline">The agentic coding engine for your terminal</p>
+
+      <div class="feature-list">
+        <div class="feature">
+          <div class="feature-title">// INTERFACE</div>
+          <p>Lives in your terminal as a CLI tool. No browser required. Works directly inside VS Code, JetBrains, or any editor with a terminal.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// AUTONOMY</div>
+          <p>Agentic by design — reads files, writes code, runs tests, executes shell commands, and manages git without constant hand-holding.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// CODEBASE AWARENESS</div>
+          <p>Understands your entire repository structure, not just the code you paste. Context-aware across all files simultaneously.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// TOOLS &amp; ACTIONS</div>
+          <p>Can create/edit/delete files, install packages, run linters, commit to git, browse the web, and call MCP servers.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// AUDIENCE</div>
+          <p>Built for software engineers and developers. Requires comfort with the command line and basic git workflows.</p>
+        </div>
+      </div>
+
+      <!-- Terminal Demo -->
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="btn btn-red"></div>
+          <div class="btn btn-yellow"></div>
+          <div class="btn btn-green"></div>
+          <span>~/my-project — claude</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="prompt">$ </span><span class="cmd">claude</span></div>
+          <div class="out">✓ Reading codebase... 42 files indexed</div>
+          <div><span class="prompt">&gt; </span><span class="cmd">add user authentication with JWT</span></div>
+          <div class="out">● Creating src/auth/jwt.ts</div>
+          <div class="out">● Updating src/middleware/auth.ts</div>
+          <div class="out">● Running: npm test — 48 passed</div>
+          <div class="out">● Committing: "feat: add JWT auth"</div>
+          <div><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER DIVIDER -->
+    <div class="split-divider"></div>
+
+    <!-- RIGHT: Claude Chat -->
+    <div class="panel panel-chat">
+      <div class="panel-label">
+        <span class="dot"></span>
+        Claude Chat
+      </div>
+      <h2>Claude Chat</h2>
+      <p class="tagline">The conversational AI for everyone</p>
+
+      <div class="feature-list">
+        <div class="feature">
+          <div class="feature-title">// INTERFACE</div>
+          <p>A polished web application at claude.ai — also available as mobile apps. No setup, no terminal, no installation needed.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// INTERACTION</div>
+          <p>Back-and-forth conversation. You ask, Claude responds. Great for exploration, brainstorming, and iterative Q&amp;A.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// DOCUMENT AWARENESS</div>
+          <p>Upload files (PDFs, images, spreadsheets) within a conversation. Projects let you build persistent context over time.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// ARTIFACTS</div>
+          <p>Generates renderable outputs — code, SVGs, HTML — displayed live in a side panel. Great for quick prototyping.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-title">// AUDIENCE</div>
+          <p>Anyone. Writers, analysts, researchers, students, product managers — no technical background required.</p>
+        </div>
+      </div>
+
+      <!-- Chat Demo -->
+      <div class="chat-demo">
+        <div class="bubble bubble-user">
+          Can you explain the difference between async/await and promises in JavaScript?
+        </div>
+        <div class="bubble bubble-claude">
+          Great question! Both handle asynchronous operations, but async/await is syntactic sugar built on top of Promises that makes async code read like synchronous code…
+        </div>
+        <div class="bubble bubble-user">
+          Can you show me a practical example?
+        </div>
+        <div class="bubble bubble-claude">
+          <div class="typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="comparison-section">
+    <h3>Side-by-Side at a Glance</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Claude Code</th>
+          <th>Claude Chat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Interface</td>
+          <td>Terminal / CLI</td>
+          <td>Web app / Mobile</td>
+        </tr>
+        <tr>
+          <td>File system access</td>
+          <td><span class="check">✓</span> Full read/write</td>
+          <td><span class="cross">—</span> Upload only</td>
+        </tr>
+        <tr>
+          <td>Run commands</td>
+          <td><span class="check">✓</span> Shell, npm, git…</td>
+          <td><span class="cross">—</span> Not available</td>
+        </tr>
+        <tr>
+          <td>Codebase awareness</td>
+          <td><span class="check">✓</span> Entire repo</td>
+          <td><span class="cross">—</span> Pasted code only</td>
+        </tr>
+        <tr>
+          <td>Artifacts / previews</td>
+          <td><span class="cross">—</span> Terminal output</td>
+          <td><span class="check">✓</span> Rendered side panel</td>
+        </tr>
+        <tr>
+          <td>Persistent projects</td>
+          <td><span class="cross">—</span> Session-based</td>
+          <td><span class="check">✓</span> Projects feature</td>
+        </tr>
+        <tr>
+          <td>MCP / tool use</td>
+          <td><span class="check">✓</span> Extensible</td>
+          <td><span class="cross">—</span> Limited</td>
+        </tr>
+        <tr>
+          <td>Git integration</td>
+          <td><span class="check">✓</span> Native</td>
+          <td><span class="cross">—</span> None</td>
+        </tr>
+        <tr>
+          <td>Setup required</td>
+          <td>CLI install + API key</td>
+          <td>Just sign in</td>
+        </tr>
+        <tr>
+          <td>Ideal user</td>
+          <td>Developers / Engineers</td>
+          <td>Everyone</td>
+        </tr>
+        <tr>
+          <td>Primary model</td>
+          <td>Claude Sonnet / Opus</td>
+          <td>Claude Sonnet / Haiku</td>
+        </tr>
+        <tr>
+          <td>Internet search</td>
+          <td><span class="check">✓</span> Via web tool</td>
+          <td><span class="check">✓</span> Built-in</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- USE CASES -->
+  <div class="use-cases">
+    <h3>When to Use Which</h3>
+    <div class="use-case-grid">
+      <div class="use-case-card code-card">
+        <h4>Reach for Claude Code when…</h4>
+        <ul>
+          <li>You need to refactor a large codebase</li>
+          <li>You're fixing bugs across multiple files</li>
+          <li>You want to write, run, and iterate on tests</li>
+          <li>You're setting up a new project from scratch</li>
+          <li>You need git commits written for you</li>
+          <li>You're integrating APIs or building backend services</li>
+          <li>You want an agent that works autonomously for minutes at a time</li>
+        </ul>
+      </div>
+      <div class="use-case-card chat-card">
+        <h4>Reach for Claude Chat when…</h4>
+        <ul>
+          <li>You want to brainstorm ideas or get feedback</li>
+          <li>You need to summarize or analyze a document</li>
+          <li>You're drafting an email, report, or blog post</li>
+          <li>You want to learn a concept interactively</li>
+          <li>You need a quick code snippet or explanation</li>
+          <li>You're on mobile and away from your desk</li>
+          <li>You're not a developer and just want to get things done</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built with Claude &nbsp;·&nbsp; <a href="https://claude.ai" target="_blank">claude.ai</a> &nbsp;·&nbsp; <a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank">Claude Code Docs</a></p>
+  </footer>
+
+</body>
+</html>
